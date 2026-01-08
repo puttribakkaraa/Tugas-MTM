@@ -33,6 +33,13 @@
                 <a href="{{ route('barcode.index') }}" class="nav-link flex items-center px-6 py-3 {{ Request::is('cetak-barcode') ? 'active' : 'text-gray-600' }}">
                     <i class="fas fa-camera w-6 text-center mr-3"></i> <span>Cetak Barcode</span>
                 </a>
+                <p class="px-8 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-6 mb-2">Laporan</p>
+            <a href="/laporan-absensi" class="nav-link flex items-center px-6 py-3 {{ Request::is('laporan-absensi') ? 'active' : 'text-gray-600' }}">
+                <i class="fas fa-file-download w-6 text-center mr-3"></i> 
+                <span class="text-sm font-bold bg-gradient-to-r from-orange-600 to-red-500 bg-clip-text text-transparent">
+                    Download Laporan
+                </span>
+            </a>
             </nav>
             <form action="/logout" method="POST" class="px-6 py-4 mt-auto">
     @csrf

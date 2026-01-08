@@ -2,114 +2,196 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Absensi Mandiri - Sigap PT MTM</title>
+    <title>Sistem Absensi Mandiri - Sigap PT MTM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Font -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .astra-gradient { background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700;800&display=swap');
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            background: #f2f6fb;
+            margin: 0;
+        }
+
+        /* ===== BACKGROUND KARAKTER ===== */
+        .bg-main {
+            min-height: 100vh;
+            background:
+                url("{{ asset('images/kiri.png') }}") left bottom no-repeat,
+                url("{{ asset('images/kanan.png') }}") right bottom no-repeat,
+                linear-gradient(135deg, #004080, #0066cc);
+            background-size:
+                130px auto,
+                130px auto,
+                cover;
+            padding-bottom: 120px;
+        }
+
+        @media (min-width: 414px) {
+            .bg-main {
+                background-size:
+                    150px auto,
+                    150px auto,
+                    cover;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .bg-main {
+                background-size:
+                    260px auto,
+                    260px auto,
+                    cover;
+            }
+        }
+
+        /* Tombol status */
+        .status-btn {
+            padding: .9rem;
+            border-radius: 1.3rem;
+            font-weight: 700;  
+            background: #f1f5f9;
+            text-align: center;
+            transition: all .2s ease;
+            cursor: pointer;
+        }
+
+        /* Animasi alasan */
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide { animation: slideDown .25s ease-out; }
     </style>
 </head>
-<body class="astra-gradient flex items-center justify-center min-h-screen p-4">
 
-    <div class="glass-card p-8 rounded-[2rem] shadow-2xl w-full max-w-sm border border-white/20">
-        
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-2xl mb-4 shadow-inner">
-                <i class="fas fa-fingerprint text-blue-600 text-3xl"></i>
+<body>
+
+<div class="bg-main flex flex-col items-center">
+
+    <!-- HEADER -->
+    <div class="text-center text-white pt-6 pb-6 px-2">
+        <h1 class="text-2xl font-extrabold uppercase">
+            SISTEM ABSENSI MANDIRI
+        </h1>
+        <p class="text-xs opacity-90 mt-1">
+            Sigap PT MTM <br>
+            PT MTM - Integrated System
+        </p>
+    </div>
+
+    <!-- CARD -->
+    <div class="bg-white w-full max-w-[330px] rounded-[2.5rem] shadow-2xl z-10">
+
+        <!-- CARD HEADER -->
+        <div class="p-6 text-center border-b">
+            <div class="w-16 h-16 mx-auto rounded-full bg-blue-50 flex items-center justify-center mb-3">
+                <i class="fa-solid fa-fingerprint text-blue-900 text-2xl"></i>
             </div>
-            <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight uppercase">E-Absensi</h2>
-            <div class="h-1 w-12 bg-blue-600 mx-auto mt-2 rounded-full"></div>
-            <p class="text-slate-500 text-xs mt-3 font-medium tracking-wide">SIGAP MANAGEMENT SYSTEM</p>
+            <h2 class="text-lg font-extrabold text-slate-800">
+                Selamat Datang
+            </h2>
+            <p class="text-[11px] text-slate-400">
+                Silakan masukkan data kehadiran
+            </p>
         </div>
 
-        <form action="/absen-mandiri" method="POST" class="space-y-5">
-            @csrf
-            
-            <div class="relative">
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">Nomor Pokok Karyawan (NPK)</label>
-                <div class="relative group">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 group-focus-within:text-blue-600">
-                        <i class="fas fa-id-card"></i>
-                    </span>
-                    <input type="number" name="npk" placeholder="Contoh: 3608" required 
-                           class="w-full bg-slate-50 border-2 border-slate-100 pl-11 pr-4 py-3.5 rounded-2xl text-lg font-bold text-slate-700 focus:outline-none focus:border-blue-600 focus:bg-white transition-all placeholder:font-normal placeholder:text-slate-300">
-                </div>
-            </div>
+        <!-- FORM -->
+        <div class="p-6">
+            <form method="POST" action="/absen-mandiri" class="space-y-5">
+                @csrf
 
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">Status Kehadiran</label>
-                <div class="relative">
-                    <select name="status" id="status_select" required
-                            class="w-full appearance-none bg-slate-50 border-2 border-slate-100 p-3.5 rounded-2xl font-semibold text-slate-700 focus:outline-none focus:border-blue-600 focus:bg-white transition-all cursor-pointer">
-                        <option value="Hadir" class="font-semibold">✅ HADIR</option>
-                        <option value="Izin" class="font-semibold">🟡 IZIN</option>
-                        <option value="Sakit" class="font-semibold">🔵 SAKIT</option>
-                        <option value="Cuti" class="font-semibold">🟢 CUTI</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400">
-                        <i class="fas fa-chevron-down text-xs"></i>
+                <!-- NPK -->
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                        Nomor Induk Karyawan (NPK)
+                    </label>
+                    <input type="number" name="npk" required
+                        placeholder="3608"
+                        class="w-full mt-2 bg-slate-50 border-2 border-slate-200 p-3 rounded-xl text-base font-bold focus:outline-none focus:border-blue-500">
+                </div>
+
+                <!-- STATUS -->
+                <div>
+                    <label class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                        Status Kehadiran
+                    </label>
+
+                    <div class="grid grid-cols-2 gap-3 mt-3">
+
+                        <label>
+                            <input type="radio" name="status" value="Hadir" checked class="peer hidden">
+                            <div class="status-btn peer-checked:bg-blue-900 peer-checked:text-white">
+                                ✔ HADIR
+                            </div>
+                        </label>
+
+                        <label>
+                            <input type="radio" name="status" value="Izin" class="peer hidden">
+                            <div class="status-btn peer-checked:bg-orange-400 peer-checked:text-white">
+                                IZIN
+                            </div>
+                        </label>
+
+                        <label>
+                            <input type="radio" name="status" value="Sakit" class="peer hidden">
+                            <div class="status-btn peer-checked:bg-blue-700 peer-checked:text-white">
+                                SAKIT
+                            </div>
+                        </label>
+
+                        <label>
+                            <input type="radio" name="status" value="Cuti" class="peer hidden">
+                            <div class="status-btn peer-checked:bg-red-500 peer-checked:text-white">
+                                CUTI
+                            </div>
+                        </label>
+
                     </div>
                 </div>
-            </div>
 
-            <div id="reason_container" class="hidden transform transition-all duration-300 origin-top">
-                <label class="block text-[10px] font-bold text-amber-600 uppercase mb-1.5 ml-1 flex items-center gap-1">
-                    <i class="fas fa-info-circle"></i> Keterangan Alasan
-                </label>
-                <textarea name="reason" rows="3" 
-                          class="w-full bg-amber-50 border-2 border-amber-100 p-4 rounded-2xl text-sm font-medium text-amber-900 focus:outline-none focus:border-amber-400 placeholder:text-amber-300" 
-                          placeholder="Mohon berikan keterangan singkat..."></textarea>
-            </div>
+                <!-- ALASAN (TIDAK DIHILANGKAN) -->
+                <div id="reasonBox" class="hidden">
+                    <textarea name="alasan" rows="2"
+                        class="w-full bg-amber-50 border-2 border-amber-200 p-3 rounded-xl text-sm font-medium focus:outline-none"
+                        placeholder="Masukkan alasan / keterangan..."></textarea>
+                </div>
 
-            <div class="pt-2">
-                <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-extrabold text-sm shadow-xl shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-2">
-                    Kirim Data <i class="fas fa-paper-plane text-[10px]"></i>
+                <!-- BUTTON -->
+                <button type="submit"
+                    class="w-full bg-blue-900 text-white py-3 rounded-full font-bold shadow-lg hover:brightness-110 transition">
+                    Kirim / Absen Mandiri
                 </button>
-            </div>
-        </form>
 
-        <div class="mt-8 text-center">
-            <div class="flex items-center justify-center gap-2 mb-2">
-                <div class="h-px w-8 bg-slate-200"></div>
-                <span class="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">PT MTM</span>
-                <div class="h-px w-8 bg-slate-200"></div>
-            </div>
-            <p class="text-[9px] text-slate-400 font-medium uppercase tracking-widest">
-                Integrated Management System © 2026
-            </p>
+            </form>
         </div>
     </div>
 
-    <script>
-        const statusSelect = document.getElementById('status_select');
-        const reasonContainer = document.getElementById('reason_container');
-        const textarea = reasonContainer.querySelector('textarea');
+  
 
-        statusSelect.addEventListener('change', function() {
-            if (this.value !== 'Hadir') {
-                reasonContainer.classList.remove('hidden');
-                reasonContainer.classList.add('animate-slide-down');
-                textarea.required = true;
-                textarea.focus();
-            } else {
-                reasonContainer.classList.add('hidden');
-                textarea.required = false;
+</div>
+
+<!-- SCRIPT ALASAN -->
+<script>
+    const radios = document.querySelectorAll('input[name="status"]');
+    const reasonBox = document.getElementById('reasonBox');
+
+    radios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.value !== 'Hadir' && radio.checked) {
+                reasonBox.classList.remove('hidden');
+                reasonBox.classList.add('animate-slide');
+            } else if (radio.value === 'Hadir' && radio.checked) {
+                reasonBox.classList.add('hidden');
             }
         });
-    </script>
+    });
+</script>
 
-    <style>
-        @keyframes slide-down {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slide-down {
-            animation: slide-down 0.3s ease-out forwards;
-        }
-    </style>
 </body>
 </html>
