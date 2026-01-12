@@ -7,6 +7,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/absensi/{id}', [AttendanceController::class, 'update'])->name('employees.update');
     Route::delete('/absensi/{id}', [AttendanceController::class, 'destroy'])->name('employees.destroy');
 });
+Route::get('/absensi/sukses', function () { return view('absensi.sukses'); })->name('absensi.sukses');
+
 // 1. Redirect Halaman Utama ke Login
 Route::redirect('/', '/login');
 Route::put('/absensi/{id}', [AttendanceController::class, 'update'])->name('employees.update');

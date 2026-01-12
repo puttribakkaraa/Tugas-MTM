@@ -227,7 +227,7 @@
     </div>
 
     <div class="footer-note">
-        Enterprise Reporting System — Sigap Management
+        Sigap Management
     </div>
 </div>
 

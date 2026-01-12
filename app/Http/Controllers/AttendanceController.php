@@ -19,37 +19,59 @@ class AttendanceController extends Controller
         return view('absensi.report');
     }
 
-    public function index(Request $request)
-    {
-        $startOfMonth = now()->startOfMonth();
-        $endOfMonth = now()->endOfMonth();
-        $today = now()->toDateString();
-        
-        $dateRange = CarbonPeriod::create($startOfMonth, $endOfMonth);
+   public function index(Request $request)
+{
+    $startOfMonth = now()->startOfMonth();
+    $endOfMonth = now()->endOfMonth();
+    $today = now()->toDateString();
+    
+    // Ambil jumlah per halaman dari dropdown, default 10
+    $perPage = $request->input('per_page', 10);
+    
+    $dateRange = \Carbon\CarbonPeriod::create($startOfMonth, $endOfMonth);
 
-        $query = Employee::with(['attendances' => function($q) use ($startOfMonth, $endOfMonth) {
-            $q->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
-        }]);
+    $query = Employee::with(['attendances' => function($q) use ($startOfMonth, $endOfMonth) {
+        $q->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
+    }]);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('npk', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
-            });
-        }
-
-        $employees = $query->get();
-
-        if ($request->status_filter == 'tidak_hadir') {
-            $employees = $employees->filter(function ($employee) use ($today) {
-                return !$employee->attendances->where('date', $today)->first();
-            });
-            $dateRange = CarbonPeriod::create(now(), now());
-        }
-
-        return view('absensi.grid', compact('employees', 'dateRange', 'startOfMonth'));
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('npk', 'like', "%{$search}%")
+              ->orWhere('name', 'like', "%{$search}%");
+        });
     }
+
+    // Filter tidak hadir jika dipilih
+    if ($request->status_filter == 'tidak_hadir') {
+        $query->whereDoesntHave('attendances', function($q) use ($today) {
+            $q->where('date', $today);
+        });
+        $dateRange = \Carbon\CarbonPeriod::create(now(), now());
+    }
+
+    // --- LOGIKA HITUNG STATS (Dihitung dari semua data untuk akurasi dashboard) ---
+    $allEmployees = Employee::with(['attendances' => function($q) use ($today) {
+        $q->where('date', $today);
+    }])->get();
+
+    $stats = ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'cuti' => 0, 'alpa' => 0];
+    foreach ($allEmployees as $emp) {
+        $atd = $emp->attendances->first();
+        if ($atd) {
+            $status = strtolower($atd->status);
+            if (isset($stats[$status])) $stats[$status]++;
+        } else {
+            $stats['alpa']++;
+        }
+    }
+
+    // Ambil data dengan Pagination
+    $employees = $query->paginate($perPage)->withQueryString();
+
+    return view('absensi.grid', compact('employees', 'dateRange', 'startOfMonth', 'stats', 'perPage'));
+}
+    
 
     public function export(Request $request)
     {
@@ -85,60 +107,67 @@ if ($format == 'excel') {
         return $pdf->download('Laporan_Absensi_Sigap.pdf');
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'npk' => 'required|unique:employees,npk',
-            'name' => 'required',
-            'department' => 'required',
-            'title' => 'required',
-        ]);
+   public function store(Request $request)
+{
+    $request->validate([
+        'npk' => 'required|unique:employees,npk',
+        'name' => 'required',
+        'department' => 'required',
+        'title' => 'required',
+    ]);
 
-        Employee::create($request->all());
-        return redirect()->back()->with('success', 'Karyawan berhasil ditambahkan!');
-    }
+    Employee::create($request->all());
 
-    public function AbsenMandiri(Request $request)
+    // UBAH DARI 'view' MENJADI 'redirect'
+    // Arahkan kembali ke halaman grid/tabel karyawan
+    return redirect()->route('absensi.index')->with('success', 'Karyawan baru berhasil ditambahkan!');
+}
+
+ public function AbsenMandiri(Request $request)
 {
     $request->validate([
         'npk' => 'required',
         'status' => 'required|in:Hadir,Izin,Sakit,Cuti',
-        'reason' => 'nullable|string'
+        'alasan' => 'nullable|string'
     ]);
 
-    // --- LOGIKA BATAS WAKTU ---
+    // Set zona waktu Indonesia
+    date_default_timezone_set('Asia/Jakarta');
     $now = now();
     $startTime = '08:15';
-    $endTime = '09:30';
+    $endTime   = '09:30';
     $currentTime = $now->format('H:i');
 
-    // Hanya kunci status "Hadir", untuk Izin/Sakit biasanya dibolehkan kapan saja
-    if ($request->status == 'Hadir,Izin,Sakit,Cuti') {
-        if ($currentTime < $startTime || $currentTime > $endTime) {
-        
-        return back()->with('error', "Akses Ditolak! Absen HADIR hanya tersedia pukul $startTime - $endTime WIB. Jam sistem saat ini: $currentTime");
-        }
+    // CEK WAKTU (Berlaku untuk semua status)
+    if ($currentTime < $startTime || $currentTime > $endTime) {
+        // Mengirim pesan error ke session
+        return redirect()->back()->with('error', "Waktu absensi berakhir! Batas jam absen adalah pukul $startTime s/d $endTime WIB. Saat ini pukul $currentTime WIB.");
     }
-    // --------------------------
 
     $employee = Employee::where('npk', $request->npk)->first();
-    if (!$employee) { return back()->with('error', 'NPK tidak ditemukan!'); }
+    if (!$employee) {
+        return redirect()->back()->with('error', 'NPK tidak ditemukan! Silakan hubungi Admin.');
+    }
 
     $today = $now->toDateString();
-    $existing = Attendance::where('employee_id', $employee->id)->where('date', $today)->first();
-    if ($existing) { return back()->with('error', 'Anda sudah melakukan absensi hari ini.'); }
+    if (Attendance::where('employee_id', $employee->id)->where('date', $today)->exists()) {
+        return redirect()->back()->with('error', 'Anda sudah melakukan absensi hari ini.');
+    }
 
     Attendance::create([
         'employee_id' => $employee->id,
         'date' => $today,
-        'time' => $now->toTimeString(),
+        'time_in' => $now->toTimeString(),
         'status' => $request->status,
-        'reason' => ($request->status == 'Hadir') ? null : $request->reason,
+        'reason' => ($request->status === 'Hadir') ? null : $request->alasan,
     ]);
 
-      return redirect()->back()->with('success', "Absensi Berhasil! Terima kasih, {$employee->name}!!!. Integritas, Kejujuran Number One.");
+    return redirect()->route('absensi.sukses')->with([
+        'nama' => $employee->name,
+        'status' => $request->status,
+        'jam' => $now->format('H:i')
+    ]);
 }
-
     public function dashboard()
     {
         $totalKaryawan = Employee::count();
@@ -170,8 +199,7 @@ if ($format == 'excel') {
         if ($employee) {
             Attendance::updateOrCreate(
                 ['employee_id' => $employee->id, 'date' => now()->toDateString()],
-                ['time' => now()->toTimeString(), 'status' => 'Hadir']
-            );
+               ['time_in' => now()->toTimeString(), 'status' => 'Hadir']);
             return response()->json(['status' => 'success', 'message' => 'Absen Berhasil!']);
         }
         return response()->json(['status' => 'error', 'message' => 'NPK tidak ditemukan'], 404);
