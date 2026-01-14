@@ -15,32 +15,39 @@
             background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
             height: 100vh;
             width: 100vw;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* PRIORITAS GAMBAR: Tinggi dinaikkan agar karakter terlihat sampai badan */
+        /* CONTAINER GAMBAR: Diperkecil skalanya agar tidak terlalu naik ke tengah */
         .char-container {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 55vh; 
-            z-index: 10; /* Z-index lebih tinggi agar kaki karakter di depan card jika perlu */
+            height: 42vh; /* Dikurangi dari 55vh agar tidak menabrak card */
+            z-index: 5; 
             pointer-events: none;
+            display: flex;
+            justify-content:空间-between;
         }
 
         .char-bg {
             position: absolute;
-            bottom: -10px;
+            bottom: -5px;
             height: 100%;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
             transition: all 0.5s ease;
         }
 
-        .img-kiri { left: -20px; transform: rotate(2deg); }
-        .img-kanan { right: -20px; transform: rotate(-2deg); }
+        /* Posisi gambar lebih ke pinggir agar card di tengah terlihat jelas */
+        .img-kiri { left: -10px; }
+        .img-kanan { right: -10px; }
 
         @media (min-width: 905px) {
-            .char-container { height: 75vh; }
+            .char-container { height: 65vh; }
             .img-kiri { left: 5%; }
             .img-kanan { right: 5%; }
         }
@@ -50,49 +57,42 @@
         }
 
         @keyframes pop {
-            0% { opacity: 0; transform: translateY(-50px) scale(0.9); }
-            100% { opacity: 1; transform: translateY(0px) scale(1); } 
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); } 
         }
     </style>
 </head>
-<body class="min-h-screen flex items-start justify-center px-6 pt-10">
+<body class="px-6 pt-6"> <div class="pop-in bg-white/95 backdrop-blur-md rounded-[2rem] px-4 py-5
+                text-center shadow-[0_15px_40px_rgba(0,0,0,0.4)]
+                max-w-[260px] w-full relative z-20
+                border-b-[5px] border-emerald-500 mt-2">
 
-    <div class="char-container">
-        <img src="{{ asset('images/suksess1.png') }}" class="char-bg img-kiri" alt="Sukses 1">
-        <img src="{{ asset('images/suksess2.png') }}" class="char-bg img-kanan" alt="Sukses 2">
-    </div>
-
-    <div class="pop-in bg-white/90 backdrop-blur-lg rounded-[2.5rem] px-5 py-6
-                text-center shadow-[0_20px_50px_rgba(0,0,0,0.3)]
-                max-w-[280px] w-full relative z-20
-                border-b-[6px] border-emerald-500 mt-2">
-
-        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-check-circle text-emerald-500 text-3xl"></i>
+        <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-check-circle text-emerald-500 text-2xl"></i>
         </div>
 
-        <h1 class="text-lg font-black text-blue-950 leading-tight">
+        <h1 class="text-md font-black text-blue-950 leading-tight tracking-tight">
             ABSENSI SUKSES!
         </h1>
 
-        <div class="mt-5 space-y-3">
-            <div class="bg-white/50 p-3 rounded-xl border border-slate-100">
-                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Karyawan</p>
-                <p class="text-sm font-extrabold text-blue-900 truncate">
+        <div class="mt-4 space-y-2">
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <p class="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Karyawan</p>
+                <p class="text-xs font-extrabold text-blue-900 truncate">
                     {{ session('nama') ?? 'User MTM' }}
                 </p>
             </div>
 
             <div class="flex gap-2">
-                <div class="flex-1 bg-white/50 p-2 rounded-xl border border-slate-100">
-                    <p class="text-[8px] font-bold text-slate-400 uppercase">Status</p>
-                    <p class="text-[10px] font-black text-emerald-600">
+                <div class="flex-1 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    <p class="text-[7px] font-bold text-slate-400 uppercase">Status</p>
+                    <p class="text-[9px] font-black text-emerald-600">
                         {{ session('status') ?? 'HADIR' }}
                     </p>
                 </div>
-                <div class="flex-1 bg-white/50 p-2 rounded-xl border border-slate-100">
-                    <p class="text-[8px] font-bold text-slate-400 uppercase">Jam</p>
-                    <p class="text-[10px] font-black text-slate-700">
+                <div class="flex-1 bg-slate-50 p-2 rounded-xl border border-slate-100">
+                    <p class="text-[7px] font-bold text-slate-400 uppercase">Jam</p>
+                    <p class="text-[9px] font-black text-slate-700">
                         {{ session('jam') ?? now()->format('H:i') }}
                     </p>
                 </div>
@@ -100,15 +100,20 @@
         </div>
 
         <a href="/absen-mandiri"
-           class="flex items-center justify-center mt-6 bg-blue-900 
-                  text-white w-full py-3.5 rounded-xl
-                  text-xs font-bold shadow-lg uppercase tracking-widest active:scale-95 transition-all">
+           class="flex items-center justify-center mt-5 bg-blue-900 
+                  text-white w-full py-3 rounded-xl
+                  text-[10px] font-bold shadow-lg uppercase tracking-widest active:scale-95 transition-all">
             Selesai
         </a>
     </div>
 
-    <div class="fixed bottom-3 left-0 right-0 text-center z-30 opacity-60">
-        <p class="text-[7px] font-bold text-white tracking-[0.4em]">
+    <div class="char-container">
+        <img src="{{ asset('images/suksess1.png') }}" class="char-bg img-kiri" alt="Sukses 1">
+        <img src="{{ asset('images/suksess2.png') }}" class="char-bg img-kanan" alt="Sukses 2">
+    </div>
+
+    <div class="fixed bottom-2 left-0 right-0 text-center z-30 opacity-50">
+        <p class="text-[6px] font-bold text-white tracking-[0.3em]">
             PT MTM • DIGITAL SYSTEM
         </p>
     </div>
